@@ -9,15 +9,15 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # create/update
-doc_ref = db.collection(u'users').document(u'alovelace')
+doc_ref = db.collection('users').document('alovelace')
 doc_ref.set({
-    u'first': u'Ada',
-    u'last': u'Lovelace',
-    u'born': 1815
+    'first': 'Ada',
+    'last': 'Lovelace',
+    'born': 1815
 })
 
 # read
-users_ref = db.collection(u'users')
+users_ref = db.collection('users')
 docs = users_ref.stream()
 for doc in docs:
     print(f'{doc.id} => {doc.to_dict()}')
