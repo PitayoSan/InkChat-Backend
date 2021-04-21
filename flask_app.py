@@ -24,9 +24,10 @@ def create_user():
 	user_doc = db.collection('users').document(username)
 	user_doc.set({
 		'username': username,
-		'email': email
+		'email': email,
+		'friends': {}
 	})
-	return True
+	return username
 
 @app.route('/friends', methods=['GET'])
 def get_all_friends():
@@ -46,13 +47,13 @@ def send_friend_request():
 	else:
 		abort(400)
 	
-	user_doc = db.collection('users').document(sender)
+	user_doc = db.collection('users').document(dest)
 	friends = user_doc.get().to_dict()['friends']
-	if dest in friends:
-		return False
-	friends[dest] = False
+	if source in friends:
+		return 'ERROR: sender is already friends with dest or there is already a pending friend request.'
+	friends[sender] = False
 	user_doc.set(friends, merge=True)
-	return True
+	return dest
 
 @app.route('/friends', methods=['PUT'])
 def accept_friend_request():
@@ -62,13 +63,19 @@ def accept_friend_request():
 	else:
 		abort(400)
 	
-	user_doc = db.collection('users').document(sender)
-	friends = user_doc.get().to_dict()['friends']
-	if dest not in friends:
-		return False
-	friends[dest] = True
-	user_doc.set(friends, merge=True)
-	return True
+	dest_doc = db.collection('users').document(dest)
+	dest_friends = dest_doc.get().to_dict()['friends']
+	if sender not in dest_friends:
+		return 'ERROR: there is no pending friend request between sender and dest.'
+	dest_friends[sender] = True
+	dest_doc.set(friends, merge=True)
+
+	sender_doc = db.collection('users').document(sender)
+	sender_friends = sender_doc.get().to_dict()['friends']
+	sender_friends[dest] = True
+	sender_doc.set(friends, merge=True)
+
+	return sender
 
 @app.route('/friends', methods=['DELETE'])
 def delete_friend_or_friend_request():
@@ -81,7 +88,7 @@ def delete_friend_or_friend_request():
 	user_doc = db.collection('users').document(user)
 	friends = user_doc.get().to_dict()['friends']
 	if friend not in friends:
-		return False
+		return 'ERROR: friend isn\'t a friend of user or there is no pending friend request between them.'
 	friends.pop(friend)
 	user_doc.set(friends, merge=True)
-	return True
+	return friend
