@@ -8,20 +8,64 @@ cred = credentials.Certificate("./key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# create/update
-doc_ref = db.collection('users').document('alovelace')
-doc_ref.set({
-    'first': 'Ada',
-    'last': 'Lovelace',
-    'born': 1815
-})
+@app.route('/', methods=['GET'])
+def home():
+	return 'This is the InkChat server.'
 
-# read
-users_ref = db.collection('users')
-docs = users_ref.stream()
-for doc in docs:
-    print(f'{doc.id} => {doc.to_dict()}')
+@app.route('/friends', methods=['GET'])
+def get_all_friends():
+	if 'user' in request.args:
+		user = request.args['user']
+	else:
+		abort(400)
+	
+	user_doc = db.collection('users').document(user)
+	return user_doc.get().to_dict()['friends']
 
-@app.route('/')
-def hello_world():
-	return 'Hello from InkChat!'
+@app.route('/friends', methods=['POST'])
+def send_friend_request():
+	if 'sender' in request.args and 'dest' in request.args:
+		sender = request.args['sender']
+		dest = request.args['dest']
+	else:
+		abort(400)
+	
+	user_doc = db.collection('users').document(sender)
+	friends = user_doc.get().to_dict()['friends']
+	if dest in friends:
+		return False
+	friends[dest] = False
+	user_doc.set(friends, merge=True)
+	return True
+
+@app.route('/friends', methods=['PUT'])
+def accept_friend_request():
+	if 'sender' in request.args and 'dest' in request.args:
+		sender = request.args['sender']
+		dest = request.args['dest']
+	else:
+		abort(400)
+	
+	user_doc = db.collection('users').document(sender)
+	friends = user_doc.get().to_dict()['friends']
+	if dest not in friends:
+		return False
+	friends[dest] = True
+	user_doc.set(friends, merge=True)
+	return True
+
+@app.route('/friends', methods=['DELETE'])
+def delete_friend_or_request():
+	if 'user' in request.args and 'friend' in request.args:
+		user = request.args['user']
+		friend = request.args['friend']
+	else:
+		abort(400)
+	
+	user_doc = db.collection('users').document(user)
+	friends = user_doc.get().to_dict()['friends']
+	if friend not in friends:
+		return False
+	friends.pop(friend)
+	user_doc.set(friends, merge=True)
+	return True
