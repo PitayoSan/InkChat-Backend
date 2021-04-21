@@ -12,6 +12,21 @@ db = firestore.client()
 def home():
 	return 'This is the InkChat server.'
 
+@app.route('/users', method=['POST'])
+def create_user():
+	if 'username' in request.args and 'email' in request.args:
+		username = request.args['username']
+		email = request.args['email']
+	else:
+		abort(400)
+	
+	user_doc = db.collection('users').document(username)
+	user_doc.set({
+		'username': username,
+		'email': email
+	})
+	return True
+
 @app.route('/friends', methods=['GET'])
 def get_all_friends():
 	if 'user' in request.args:
@@ -55,7 +70,7 @@ def accept_friend_request():
 	return True
 
 @app.route('/friends', methods=['DELETE'])
-def delete_friend_or_request():
+def delete_friend_or_friend_request():
 	if 'user' in request.args and 'friend' in request.args:
 		user = request.args['user']
 		friend = request.args['friend']
