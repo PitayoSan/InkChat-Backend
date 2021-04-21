@@ -95,9 +95,16 @@ def delete_friend_or_friend_request():
 		return 'ERROR: user and friend can\'t be the same"
 
 	user_doc = db.collection('users').document(user)
-	friends = user_doc.get().to_dict()['friends']
-	if friend not in friends:
+	user_friends = user_doc.get().to_dict()['friends']
+	if friend not in user_friends:
 		return 'ERROR: friend isn\'t a friend of user or there is no pending friend request between them.'
-	friends.pop(friend)
-	user_doc.set({'friends': friends}, merge=True)
+	user_friends.pop(friend)
+	user_doc.set({'friends': user_friends}, merge=True)
+	
+	friend_doc = db.collection('users').document(friend)
+	friend_friends = friend_doc.get().to_dict()['friends']
+	if user in friend_friends:
+		friend_friends.pop(user)
+		friend_doc.set({'friends': friend_friends}, merge=True)
+
 	return friend
