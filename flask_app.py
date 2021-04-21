@@ -99,12 +99,16 @@ def delete_friend_or_friend_request():
 	if friend not in user_friends:
 		return 'ERROR: friend isn\'t a friend of user or there is no pending friend request between them.'
 	user_friends.pop(friend)
-	user_doc.set({'friends': user_friends}, merge=True)
+	temp = user_doc.get().to_dict()
+	temp['friends'] = user_friends
+	user_doc.set(temp)
 	
 	friend_doc = db.collection('users').document(friend)
 	friend_friends = friend_doc.get().to_dict()['friends']
 	if user in friend_friends:
 		friend_friends.pop(user)
-		friend_doc.set({'friends': friend_friends}, merge=True)
+		temp = friend_doc.get().to_dict()
+		temp['friends'] = friend_friends
+		friend_doc.set(temp)
 
 	return friend
