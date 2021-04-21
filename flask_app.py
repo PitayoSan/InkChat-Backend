@@ -5,7 +5,7 @@ from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 
-cred = credentials.Certificate("./key.json")
+cred = credentials.Certificate('./key.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -48,7 +48,7 @@ def send_friend_request():
 		return 'ERROR: wrong params.\nsender: user sending friend request\ndest: user the firend request is being sent to'
 	
 	if sender == dest:
-		return 'ERROR: sender and dest can\'t be the same"
+		return 'ERROR: sender and dest can\'t be the same'
 
 	user_doc = db.collection('users').document(dest)
 	friends = user_doc.get().to_dict()['friends']
@@ -67,7 +67,7 @@ def accept_friend_request():
 		return 'ERROR: wrong params.\nsender: user that sent the friend request\ndest: user that is accepting the firend request'
 	
 	if sender == dest:
-		return 'ERROR: sender and dest can\'t be the same"
+		return 'ERROR: sender and dest can\'t be the same'
 
 	dest_doc = db.collection('users').document(dest)
 	dest_friends = dest_doc.get().to_dict()['friends']
@@ -92,7 +92,7 @@ def delete_friend_or_friend_request():
 		return 'ERROR: wrong params.\nuser: user that\'s deleting a friend\nfriend: user that\'s being deleted'
 	
 	if user == friend:
-		return 'ERROR: user and friend can\'t be the same"
+		return 'ERROR: user and friend can\'t be the same'
 
 	user_doc = db.collection('users').document(user)
 	user_friends = user_doc.get().to_dict()['friends']
