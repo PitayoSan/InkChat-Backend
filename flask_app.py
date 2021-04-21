@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import request
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -12,7 +13,7 @@ db = firestore.client()
 def home():
 	return 'This is the InkChat server.'
 
-@app.route('/users', method=['POST'])
+@app.route('/users', methods=['POST'])
 def create_user():
 	if 'username' in request.args and 'email' in request.args:
 		username = request.args['username']
