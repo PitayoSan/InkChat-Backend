@@ -1,7 +1,7 @@
 import functools
 
 from flask import Blueprint, request
-from .db import db
+from .db import db, upload_user_pp
 
 
 bp = Blueprint('users', __name__, url_prefix='/users')
@@ -21,3 +21,14 @@ def create_user():
 		'friends': {}
 	})
 	return username
+
+
+@bp.route('pp', methods=['POST'])
+def update_user_pp():
+	if 'username' in request.args and 'path' in request.args:
+		username = request.args['username']
+		path = request.args['path']
+	else:
+		return 'ERROR: wrong params.\nusername: username of owner of the pic\npath: path to the file'
+
+	return upload_user_pp(username, path)
