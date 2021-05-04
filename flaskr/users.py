@@ -18,17 +18,15 @@ def get_user():
 
 @bp.route('', methods=['POST'])
 def create_user():
-	if 'uid' in request.args and 'username' in request.args and 'email' in request.args:
+	if 'uid' in request.args and 'username' in request.args:
 		uid = request.args['uid']
 		username = request.args['username']
-		email = request.args['email']
 		pp_path = request.args.get('pp', None)
 		return db.create_user(uid, username, email, pp_path)
 	return response(
 		400,
 		"uid: uid of user being created"
 		"username: username of user being created"
-		"email: email of user being created"
 	)
 
 

@@ -40,11 +40,10 @@ class FireDB():
 
     # Public Methods
     # Users
-    def create_user(self, uid, username, email, pp_path=None):
+    def create_user(self, uid, username, pp_path=None):
         user = {
             'uid': uid,
             'username': username,
-            'email': email,
             'friends': {},
             'pp': self.__upload_user_pp(uid, pp_path) if pp_path else ''
         }
