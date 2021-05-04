@@ -91,3 +91,29 @@ which can also be exported or stored in a file.
 Finally, run the server with:
 
 `(venv) $ flask run`
+
+
+## Test server
+
+### Run tests
+
+To ensure the backend runs as expected, the whole set of included tests can be run at all times with
+
+`(venv) $ pytest`
+
+
+### Test coverage
+
+To measure the coverage of the tests, run:
+
+`(venv) $ coverage run -m pytest`
+
+You can either view the coverage report within the terminal:
+
+`(venv) $ coverage report`
+
+or see an HTML report in your browser:
+
+`(venv) $ coverage html`
+
+The report will be in `htmlconv/index.html`
