@@ -21,12 +21,12 @@ class FireDB():
             print("Storage could not be initialized")
 
     # Utils
-    def __get_user_doc(self, username):
-        return self.__db.collection('users').document(username)
+    def __get_user_doc(self, uid):
+        return self.__db.collection('users').document(uid)
 
-    def __upload_user_pp(self, username, path):
+    def __upload_user_pp(self, uid, path):
         _, file_extension = os.path.splitext(path)
-        pp_name = f"{username}{file_extension}"
+        pp_name = f"{uid}{file_extension}"
         blob = self.__bucket.blob(f"users/pp/{pp_name}")
 
         file_dir = os.path.dirname(path)
@@ -40,33 +40,34 @@ class FireDB():
 
     # Public Methods
     # Users
-    def create_user(self, username, email, pp_path=None):
+    def create_user(self, uid, username, email, pp_path=None):
         user = {
+            'uid': uid,
             'username': username,
             'email': email,
             'friends': {},
-            'pp': self.__upload_user_pp(username, pp_path) if pp_path else ''
+            'pp': self.__upload_user_pp(uid, pp_path) if pp_path else ''
         }
 
-        user_doc = self.__get_user_doc(username)
+        user_doc = self.__get_user_doc(uid)
         user_doc.set(user)
         return response(201, user)
 
-    def get_user(self, username):
-        user_doc = self.__get_user_doc(username)
+    def get_user(self, uid):
+        user_doc = self.__get_user_doc(uid)
         user = user_doc.get().to_dict()
         if user: return response(200, user)
         return response(404, "user not found")
 
-    def get_user_pp(self, username):
-        user_doc = self.__get_user_doc(username)
+    def get_user_pp(self, uid):
+        user_doc = self.__get_user_doc(uid)
         pp_link = user_doc.get('pp')
         if pp_link: return response(200, pp_link)
         return response(404, "user not found")
 
-    def update_user_pp(self, username, pp_path):
-        pp_link = self.__upload_user_pp(username, pp_path)
-        user_doc = self.__get_user_doc(username)
+    def update_user_pp(self, uid, pp_path):
+        pp_link = self.__upload_user_pp(uid, pp_path)
+        user_doc = self.__get_user_doc(uid)
 
         pp = {
             'pp': pp_link
@@ -76,8 +77,8 @@ class FireDB():
         return response(201, pp)
 
     # Friends
-    def get_all_friends(self, username):
-        user_doc = self.__get_user_doc(username)
+    def get_all_friends(self, uid):
+        user_doc = self.__get_user_doc(uid)
         friends = user_doc.get().to_dict()['friends']
         if friends: return response(200, friends)
         return response(404, "user not found")
@@ -110,8 +111,8 @@ class FireDB():
         sender_doc.set({'friends': sender_friends}, merge=True)
         return response(201, sender)
 
-    def delete_friend_or_friend_request(self, username, friend):
-        user_doc = self.__get_user_doc(username)
+    def delete_friend_or_friend_request(self, uid, friend):
+        user_doc = self.__get_user_doc(uid)
         user_friends = user_doc.get().to_dict()['friends']
         if not user_friends: return response(404, "user not found")
         if friend not in user_friends:
