@@ -1,4 +1,5 @@
 import functools
+import json
 
 from flaskr import db
 from flask import Blueprint, request
@@ -18,15 +19,17 @@ def get_user():
 
 @bp.route('', methods=['POST'])
 def create_user():
-	if 'uid' in request.args and 'username' in request.args:
-		uid = request.args['uid']
-		username = request.args['username']
-		pp_path = request.args.get('pp', None)
-		return db.create_user(uid, username, email, pp_path)
+	json_data = json.loads(request.get_json())
+	if 'uid' in json_data and 'username' in json_data:
+		uid = json_data['uid']
+		username = json_data['username']
+		pp_path = json_data.get('pp', None)
+		return db.create_user(uid, username, pp_path)
 	return response(
 		400,
 		"uid: uid of user being created"
 		"username: username of user being created"
+		"(optional) path: path of the file to upload"
 	)
 
 
@@ -43,9 +46,10 @@ def get_user_pp():
 
 @bp.route('pp', methods=['POST'])
 def update_user_pp():
-	if 'uid' in request.args and 'path' in request.args:
-		uid = request.args['uid']
-		path = request.args['path']
+	json_data = json.loads(request.get_json())
+	if 'uid' in json_data and 'path' in json_data:
+		uid = json_data['uid']
+		path = json_data['path']
 		return db.update_user_pp(uid, path)
 	return response(
 		400,

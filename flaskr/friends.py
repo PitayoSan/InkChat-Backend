@@ -1,4 +1,5 @@
 import functools
+import json
 
 from flaskr import db
 from flask import Blueprint, request
@@ -17,9 +18,10 @@ def get_all_friends():
 
 @bp.route('', methods=['POST'])
 def send_friend_request():
-	if 'sender' in request.args and 'dest' in request.args:
-		sender = request.args['sender']
-		dest = request.args['dest']
+	json_data = json.loads(request.get_json())
+	if 'sender' in json_data and 'dest' in json_data:
+		sender = json_data['sender']
+		dest = json_data['dest']
 		if sender == dest:
 			return response(400, "sender and dest can't be the same")
 		return db.send_friend_request(sender, dest)
@@ -32,9 +34,10 @@ def send_friend_request():
 
 @bp.route('', methods=['PUT'])
 def accept_friend_request():
-	if 'sender' in request.args and 'dest' in request.args:
-		sender = request.args['sender']
-		dest = request.args['dest']
+	json_data = json.loads(request.get_json())
+	if 'sender' in json_data and 'dest' in json_data:
+		sender = json_data['sender']
+		dest = json_data['dest']
 		if sender == dest:
 			return response(400, "sender and dest can't be the same")
 		return db.accept_friend_request(sender, dest)
