@@ -8,7 +8,7 @@ GET_ALL_FRIENDS_PARAMS = [
     # Uses user 1
     # Existent user
     (
-        {"username": "test_friends_user_1"},
+        {"uid": "test_friends_user_1"},
         200,
         {
             "friends": {
@@ -21,13 +21,13 @@ GET_ALL_FRIENDS_PARAMS = [
 
     # Non existent user
     (
-        {"username": "non_existent_user"},
+        {"uid": "non_existent_user"},
         404,
         "user not found"
     ),
 
     # No request body
-    ({}, 400, "username: user to get all friends from")
+    ({}, 400, "uid: user to get all friends from")
 ]
 
 SEND_FRIEND_REQUEST_PARAMS = [
@@ -79,11 +79,11 @@ SEND_FRIEND_REQUEST_PARAMS = [
 ]
 
 @pytest.mark.parametrize(
-    "username, status_code, data",
+    "uid, status_code, data",
     GET_ALL_FRIENDS_PARAMS
 )
-def test_get_all_friends(client, username, status_code, data):
-    response = client.get('/friends', query_string=username)
+def test_get_all_friends(client, uid, status_code, data):
+    response = client.get('/friends', query_string=uid)
     json_data = response.get_json()
 
     assert response.status_code == status_code

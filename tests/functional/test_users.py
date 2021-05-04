@@ -7,78 +7,78 @@ from flaskr import app
 GET_USER_PARAMS = [
     # Existent user
     (
-        {"username": "test_user"},
+        {"uid": "test_user"},
         200,
         {
-            "email": "test_mail",
+            "uid": "test_user",
+            "username": "test_user",
             "friends": {}, # TODO
             "pp": "", # TODO
-            "username": "test_user"
         }
     ),
 
     # Non existent user
     (
-        {"username": "non_existent_user"},
+        {"uid": "non_existent_user"},
         404,
         "user not found"
     ),
 
     # No request body
-    ({}, 400, "username: username of requested user")
+    ({}, 400, "uid: uid of requested user")
 ]
 
 CREATE_USER_PARAMS = [
     # Success with path
     (
         {
+            "uid": "test_user",
             "username": "test_user",
-            "email": "test_mail",
             "path": "" # TODO
         },
         201,
         {
-            "email": "test_mail",
+            "uid": "test_user",
+            "username": "test_user",
             "friends": {},
             "pp": "", # TODO
-            "username": "test_user"
         }
     ),
 
     # Success without path
     (
         {
+            "uid": "test_user",
             "username": "test_user",
-            "email": "test_mail"
         },
         201,
         {
-            "email": "test_mail",
+            "uid": "test_user",
+            "username": "test_user",
             "friends": {},
-            "pp": "",
-            "username": "test_user"
+            "pp": "", # TODO
         }
+    ),
+
+    # No uid in body
+    (
+        {
+            "username": "test_user"
+        },
+        400,
+        "uid: uid of user being created"
+        "username: username of user being created"
+		"(optional) path: path of the file to upload"
     ),
 
     # No username in body
     (
         {
-            "email": "test_mail"
+            "uid": "test_user",
         },
         400,
+        "uid: uid of user being created"
         "username: username of user being created"
-		"email: email of user being created"
-		"(optional) path: path of the file to upload"
-    ),
-
-    # No email in body
-    (
-        {
-            "username": "test_user",
-        },
-        400,
-        "username: username of user being created"
-		"email: email of user being created"
 		"(optional) path: path of the file to upload"
     ),
 
@@ -86,8 +86,8 @@ CREATE_USER_PARAMS = [
     (
         {},
         400,
+        "uid: uid of user being created"
         "username: username of user being created"
-		"email: email of user being created"
 		"(optional) path: path of the file to upload"
     )
 ]
@@ -95,7 +95,7 @@ CREATE_USER_PARAMS = [
 GET_USER_PP_PARAMS = [
     # Existent user
     (
-        {"username": "test_user"},
+        {"uid": "test_user"},
         200,
         {
             "pp": "" # TODO
@@ -104,20 +104,20 @@ GET_USER_PP_PARAMS = [
 
     # Non existent user
     (
-        {"username": "non_existent_user"},
+        {"uid": "non_existent_user"},
         404,
         "user not found"
     ),
 
     # No request body
-    ({}, 400, "username: username of owner of the pic")
+    ({}, 400, "uid: uid of owner of the pic")
 ]
 
 UPDATE_USER_PP_PARAMS = [
     # Existent user
     (
         {
-            "username": "test_user",
+            "uid": "test_user",
             "path": "" # TODO
         },
         201,
@@ -129,24 +129,24 @@ UPDATE_USER_PP_PARAMS = [
     # No path in body
     (
         {
-            "username": "test_user"
+            "uid": "test_user"
         },
         400,
-        "username: username of owner of the pic"
+        "uid: uid of owner of the pic"
         "path: path to the file"
     )
 
-    # No username in body # TODO
+    # No uid in body # TODO
 
     # No request body # TODO
 ]
 
 @pytest.mark.parametrize(
-    "username, status_code, data",
+    "uid, status_code, data",
     GET_USER_PARAMS
 )
-def test_get_user(client, username, status_code, data):
-    response = client.get('/users', query_string=username)
+def test_get_user(client, uid, status_code, data):
+    response = client.get('/users', query_string=uid)
     json_data = response.get_json()
 
     assert response.status_code == status_code
@@ -166,11 +166,11 @@ def test_create_user(client, body, status_code, data):
 
 
 @pytest.mark.parametrize(
-    "username, status_code, data",
+    "uid, status_code, data",
     GET_USER_PP_PARAMS
 )
-def test_get_user_pp(client, username, status_code, data):
-    response = client.get('/users/pp', query_string=username)
+def test_get_user_pp(client, uid, status_code, data):
+    response = client.get('/users/pp', query_string=uid)
     json_data = response.get_json()
 
     assert response.status_code == status_code
