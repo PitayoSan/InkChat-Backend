@@ -1,17 +1,17 @@
 from flask import Flask
 from flask_cors import CORS
+from flaskr.db import FireDB
 
+# App creation
+app = Flask(__name__)
+CORS(app)
 
-def create_app(test_config=None):
-    app = Flask(__name__)
-    CORS(app)
+# DB init
+db = FireDB()
 
-    # Import blueprints
-    from . import home, users, friends, test
+# Import blueprints
+from flaskr import home, users, friends
 
-    app.register_blueprint(home.bp)
-    app.register_blueprint(users.bp)
-    app.register_blueprint(friends.bp)
-    app.register_blueprint(test.bp)
-
-    return app
+app.register_blueprint(home.bp)
+app.register_blueprint(users.bp)
+app.register_blueprint(friends.bp)

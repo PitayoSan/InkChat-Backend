@@ -22,6 +22,10 @@ To activate the venv, do:
 
 `$ . venv/bin/activate`
 
+or
+
+`$ source ./venv/bin/activate`
+
 Now your terminal should look like this:
 
 `(venv) $`
@@ -70,10 +74,16 @@ When you add a dependency, in order for the `requirements.txt` file to be update
 Flask needs two environment variables in order to work.  
 You can export them with:
 
-`(venv) $ export FLASK_APP=flaskr`
+`(venv) $ export FLASK_APP=run.py`
 `(venv) $ export FLASK_ENV=development`
 
 or store them in a `.env` file (already ignored by git).
+
+Also, in order for the server endpoints to interact properly with Firebase, the following env var is needed:
+
+`(venv) $ export FS_BUCKET=<project's bucket>`
+
+which can also be exported or stored in a file.
 
 
 ## Run server
