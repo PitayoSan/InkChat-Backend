@@ -78,14 +78,14 @@ class FireDB():
     # Friends
     def get_all_friends(self, username):
         user_doc = self.__get_user_doc(username)
-        friends = user_doc.get().to_dict()['friends'].to_dict()
+        friends = user_doc.get(['friends']).to_dict()
         if friends: return response(200, friends)
         return response(404, "user not found")
 
     def send_friend_request(self, sender, dest):
         user_doc = self.__get_user_doc(dest)
         friends = user_doc.get().to_dict()['friends']
-        if not friends: return response(404, "dest not found")
+        if friends is None: return response(404, "dest not found")
         if sender in friends:
             return response(
                 400,
@@ -98,7 +98,7 @@ class FireDB():
     def accept_friend_request(self, sender, dest):
         dest_doc = self.__get_user_doc(dest)
         dest_friends = dest_doc.get().to_dict()['friends']
-        if not dest_friends: return response(404, "dest not found")
+        if dest_friends is None: return response(404, "dest not found")
         if sender not in dest_friends:
             return response(400, "there is no pending friend request between sender and dest")
         dest_friends[sender] = True
@@ -113,7 +113,7 @@ class FireDB():
     def delete_friend_or_friend_request(self, username, friend):
         user_doc = self.__get_user_doc(username)
         user_friends = user_doc.get().to_dict()['friends']
-        if not user_friends: return response(404, "user not found")
+        if user_friends is None: return response(404, "user not found")
         if friend not in user_friends:
             return response(
                 400,
