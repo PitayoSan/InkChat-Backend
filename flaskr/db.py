@@ -60,7 +60,7 @@ class FireDB():
 
     def get_user_pp(self, username):
         user_doc = self.__get_user_doc(username)
-        pp_link = user_doc.get('pp')
+        pp_link = user_doc.get(['pp']).to_dict()
         if pp_link: return response(200, pp_link)
         return response(404, "user not found")
 
@@ -78,7 +78,7 @@ class FireDB():
     # Friends
     def get_all_friends(self, username):
         user_doc = self.__get_user_doc(username)
-        friends = user_doc.get().to_dict()['friends']
+        friends = user_doc.get().to_dict()['friends'].to_dict()
         if friends: return response(200, friends)
         return response(404, "user not found")
 
