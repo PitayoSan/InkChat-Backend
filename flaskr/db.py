@@ -1,6 +1,7 @@
 import os
 import firebase_admin
 
+from flaskr.utils.responses import response
 from firebase_admin import credentials, firestore, storage
 
 
@@ -17,6 +18,7 @@ class FireDB():
             return storage.bucket(os.environ['FS_BUCKET'])
         except KeyError:
             print("FS_BUCKET not found in system")
+            print("Storage could not be initialized")
 
     # Utils
     def __get_user_doc(self, username):
@@ -37,57 +39,68 @@ class FireDB():
         return blob.public_url
 
     # Public Methods
-
     # Users
     def create_user(self, username, email, pp_path=None):
-        user_doc = self.__get_user_doc(username)
-        user_doc.set({
+        user = {
             'username': username,
             'email': email,
             'friends': {},
             'pp': self.__upload_user_pp(username, pp_path) if pp_path else ''
-        })
-        
-        return username
+        }
+
+        user_doc = self.__get_user_doc(username)
+        user_doc.set(user)
+        return response(201, user)
 
     def get_user(self, username):
         user_doc = self.__get_user_doc(username)
         user = user_doc.get().to_dict()
-        return user
+        if user: return response(200, user)
+        return response(404, "user not found")
 
     def get_user_pp(self, username):
         user_doc = self.__get_user_doc(username)
         pp_link = user_doc.get('pp')
-        return pp_link
+        if pp_link: return response(200, pp_link)
+        return response(404, "user not found")
 
     def update_user_pp(self, username, pp_path):
         pp_link = self.__upload_user_pp(username, pp_path)
         user_doc = self.__get_user_doc(username)
-        user_doc.update({
+
+        pp = {
             'pp': pp_link
-        })
-        return pp_link
+        }
+
+        user_doc.update(pp)
+        return response(201, pp)
 
     # Friends
     def get_all_friends(self, username):
         user_doc = self.__get_user_doc(username)
         friends = user_doc.get().to_dict()['friends']
-        return friends
+        if friends: return response(200, friends)
+        return response(404, "user not found")
 
     def send_friend_request(self, sender, dest):
         user_doc = self.__get_user_doc(dest)
         friends = user_doc.get().to_dict()['friends']
+        if not friends: return response(404, "dest not found")
         if sender in friends:
-            return 'ERROR: sender is already friends with dest or there is already a pending friend request between them.'
+            return response(
+                400,
+                "sender is already friends with dest or there is already a pending friend request between them"
+            )
         friends[sender] = False
         user_doc.set({'friends': friends}, merge=True)
-        return dest
+        return response(201, dest)
 
     def accept_friend_request(self, sender, dest):
         dest_doc = self.__get_user_doc(dest)
         dest_friends = dest_doc.get().to_dict()['friends']
+        if not dest_friends: return response(404, "dest not found")
         if sender not in dest_friends:
-            return 'ERROR: there is no pending friend request between sender and dest.'
+            return response(400, "there is no pending friend request between sender and dest")
         dest_friends[sender] = True
         dest_doc.set({'friends': dest_friends}, merge=True)
 
@@ -95,13 +108,17 @@ class FireDB():
         sender_friends = sender_doc.get().to_dict()['friends']
         sender_friends[dest] = True
         sender_doc.set({'friends': sender_friends}, merge=True)
-        return sender
+        return response(201, sender)
 
     def delete_friend_or_friend_request(self, username, friend):
         user_doc = self.__get_user_doc(username)
         user_friends = user_doc.get().to_dict()['friends']
+        if not user_friends: return response(404, "user not found")
         if friend not in user_friends:
-            return 'ERROR: friend isn\'t a friend of user or there is no pending friend request between them.'
+            return response(
+                400,
+                "friend isn't a friend of user or there is no pending friend request between them"
+            )
         user_friends.pop(friend)
         temp = user_doc.get().to_dict()
         temp['friends'] = user_friends
@@ -114,5 +131,4 @@ class FireDB():
             temp = friend_doc.get().to_dict()
             temp['friends'] = friend_friends
             friend_doc.set(temp)
-        return friend
-    
+        return response(200, friend)
