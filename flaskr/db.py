@@ -83,51 +83,61 @@ class FireDB():
         return response(404, "user not found")
 
     def send_friend_request(self, sender, dest):
+        sender_doc = self.__get_user_doc(sender)
+        if sender_doc.get().to_dict() is None: return response(404, "sender not found")
+
         user_doc = self.__get_user_doc(dest)
+        if user_doc.get().to_dict() is None: return response(404, "dest not found")        
+
         friends = user_doc.get().to_dict()['friends']
-        if friends is None: return response(404, "dest not found")
         if sender in friends:
             return response(
                 400,
                 "sender is already friends with dest or there is already a pending friend request between them"
             )
+        
         friends[sender] = False
         user_doc.set({'friends': friends}, merge=True)
         return response(201, dest)
 
     def accept_friend_request(self, sender, dest):
+        sender_doc = self.__get_user_doc(sender)
+        if sender_doc.get().to_dict() is None: return response(404, "sender not found")
+        
         dest_doc = self.__get_user_doc(dest)
+        if dest_doc.get().to_dict() is None: return response(404, "dest not found")
+    
         dest_friends = dest_doc.get().to_dict()['friends']
-        if dest_friends is None: return response(404, "dest not found")
-        if sender not in dest_friends:
+        if sender not in dest_friends or dest_friends[sender] == True:
             return response(400, "there is no pending friend request between sender and dest")
+        
+        sender_friends = sender_doc.get().to_dict()['friends']
         dest_friends[sender] = True
         dest_doc.set({'friends': dest_friends}, merge=True)
-
-        sender_doc = self.__get_user_doc(sender)
-        sender_friends = sender_doc.get().to_dict()['friends']
         sender_friends[dest] = True
         sender_doc.set({'friends': sender_friends}, merge=True)
         return response(201, sender)
 
     def delete_friend_or_friend_request(self, username, friend):
         user_doc = self.__get_user_doc(username)
+        if user_doc.get().to_dict() is None: return response(404, "user not found")
+
+        friend_doc = self.__get_user_doc(friend)
         user_friends = user_doc.get().to_dict()['friends']
-        if user_friends is None: return response(404, "user not found")
         if friend not in user_friends:
             return response(
                 400,
                 "friend isn't a friend of user or there is no pending friend request between them"
             )
+        
+        friend_friends = friend_doc.get().to_dict()['friends']
         user_friends.pop(friend)
         temp = user_doc.get().to_dict()
         temp['friends'] = user_friends
         user_doc.set(temp)
         
-        friend_doc = self.__get_user_doc(friend)
-        friend_friends = friend_doc.get().to_dict()['friends']
-        if user in friend_friends:
-            friend_friends.pop(user)
+        if username in friend_friends:
+            friend_friends.pop(username)
             temp = friend_doc.get().to_dict()
             temp['friends'] = friend_friends
             friend_doc.set(temp)
