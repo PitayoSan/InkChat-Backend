@@ -53,7 +53,7 @@ SEND_FRIEND_REQUEST_PARAMS = [
 	# Existent user1 to Existent user2 (existent FR)
 	(
 		{"sender": TEST1_UID, "dest": TEST2_UID},
-		400,
+		403,
 		"sender is already friends with dest or there is already a pending friend request between them"
 	),
 
@@ -116,7 +116,7 @@ ACCEPT_FRIEND_REQUEST_PARAMS = [
 	# Existent user1 to existent user2 (non existent FR)
 	(
 		{"sender": TEST1_UID, "dest": TEST2_UID},
-		400,
+		403,
 		"there is no pending friend request between sender and dest"
 	),
 
@@ -179,7 +179,7 @@ DELETE_FRIEND_REQUEST_PARAMS = [
 	# Existent user1, non existen FR
 	(
 		{"uid": TEST1_UID, "friend": NON_UID},
-		400,
+		403,
 		"friend isn't a friend of user or there is no pending friend request between them"
 	),
 
@@ -230,8 +230,7 @@ def test_get_all_friends(client, uid, status_code, data):
 	response = client.get('/friends', query_string=uid)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -242,8 +241,7 @@ def test_send_friend_request(client, body, status_code, data):
 	response = client.post('/friends', json=body)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -254,8 +252,7 @@ def test_accept_friend_request(client, body, status_code, data):
 	response = client.put('/friends', json=body)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -266,5 +263,4 @@ def test_DELETE_friend_request(client, body, status_code, data):
 	response = client.delete('/friends', query_string=body)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data

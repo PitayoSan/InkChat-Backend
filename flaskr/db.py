@@ -46,7 +46,11 @@ class FireDB():
 	# Public Methods
 	# Users
 	def create_user(self, username, email, pw, encoded_pp=None):
-		user_record = auth.create_user(email=email, password=pw)
+		try:
+			user_record = auth.create_user(email=email, password=pw)
+		except firebase_admin._auth_utils.EmailAlreadyExistsError:
+			return response(403, "user already exists")
+
 		uid = user_record.uid
 
 		user = {
@@ -100,7 +104,7 @@ class FireDB():
 		friends = user_doc.get().to_dict()['friends']
 		if sender in friends:
 			return response(
-				400,
+				403,
 				"sender is already friends with dest or there is already a pending friend request between them"
 			)
 		
@@ -117,7 +121,7 @@ class FireDB():
 	
 		dest_friends = dest_doc.get().to_dict()['friends']
 		if sender not in dest_friends or dest_friends[sender] == True:
-			return response(400, "there is no pending friend request between sender and dest")
+			return response(403, "there is no pending friend request between sender and dest")
 		
 		sender_friends = sender_doc.get().to_dict()['friends']
 		dest_friends[sender] = True
@@ -134,7 +138,7 @@ class FireDB():
 		user_friends = user_doc.get().to_dict()['friends']
 		if friend not in user_friends:
 			return response(
-				400,
+				403,
 				"friend isn't a friend of user or there is no pending friend request between them"
 			)
 		

@@ -40,7 +40,7 @@ GET_USER_PARAMS = [
 ]
 
 CREATE_USER_PARAMS = [
-	# Success with path
+	# New user (with path) # TODO
 	(
 		{
 			"username": "test_username",
@@ -57,7 +57,7 @@ CREATE_USER_PARAMS = [
 		}
 	),
 
-	# Success without path
+	# New user (without path) # TODO
 	(
 		{
 			"username": "test_username",
@@ -71,6 +71,29 @@ CREATE_USER_PARAMS = [
 			"friends": {},
 			"pp": ""
 		}
+	),
+
+	# Duplicated user (with path)
+	(
+		{
+			"username": "test_username",
+			"email": "test@email.com",
+			"pw": "123456",
+			"path": TEST_PP
+		},
+		403,
+		"user already exists"
+	),
+
+	# Duplicated user (without path)
+	(
+		{
+			"username": "test_username",
+			"email": "test@email.com",
+			"pw": "123456",
+		},
+		403,
+		"user already exists"
 	),
 
 	# No email in body
