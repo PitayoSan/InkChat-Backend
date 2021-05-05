@@ -108,16 +108,17 @@ class FireDB():
 		if sender_doc.get().to_dict() is None: return response(404, "sender not found")
 
 		user_doc = self.__get_user_doc(dest)
-		if user_doc.get().to_dict() is None: return response(404, "dest not found")        
+		user_dict = user_doc.get().to_dict()
+		if user_dict is None: return response(404, "dest not found")        
 
-		friends = user_doc.get().to_dict()['friends']
+		friends = user_dict['friends']
 		if sender in friends:
 			return response(
 				403,
 				"sender is already friends with dest or there is already a pending friend request between them"
 			)
 		
-		user = user_doc.get().to_dict()
+		user = user_dict
 		friends[sender] = {
 			'username': user['username'],
 			'pp': user['pp'],
@@ -128,19 +129,29 @@ class FireDB():
 
 	def accept_friend_request(self, sender, dest):
 		sender_doc = self.__get_user_doc(sender)
-		if sender_doc.get().to_dict() is None: return response(404, "sender not found")
+		sender_dict = sender_doc.get().to_dict()
+		if sender_dict is None: return response(404, "sender not found")
 		
 		dest_doc = self.__get_user_doc(dest)
-		if dest_doc.get().to_dict() is None: return response(404, "dest not found")
+		dest_dict = dest_doc.get().to_dict()
+		if dest_dict is None: return response(404, "dest not found")
 	
-		dest_friends = dest_doc.get().to_dict()['friends']
+		dest_friends = dest_dict['friends']
 		if sender not in dest_friends or dest_friends[sender] == True:
 			return response(403, "there is no pending friend request between sender and dest")
-		
-		sender_friends = sender_doc.get().to_dict()['friends']
-		dest_friends[sender] = True
+		sender_friends = sender_dict['friends']
+
+		temp = dest_friends[sender]
+		temp['is_friends'] = True
+		dest_friends[sender] = temp
 		dest_doc.set({'friends': dest_friends}, merge=True)
-		sender_friends[dest] = True
+
+		
+		sender_friends[dest] = {
+			'username': dest_dict['username'],
+			'pp': dest_dict['pp'],
+			'is_friends': True,
+		}
 		sender_doc.set({'friends': sender_friends}, merge=True)
 		return response(201, sender)
 
