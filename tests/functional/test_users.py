@@ -1,11 +1,16 @@
 import pytest
 import json
+import base64
+import os.path
 
 from flaskr import app
 
 TEST_UID = '0KEYuXyOxcUjNSESd4RHeAOi3BP2'
 TEST1_UID = 'DM2wPOAS0Rerk58bNn5kxs81K452'
 TEST2_UID = 'rMP0MM14zmTdR7T0E9f8m2hJDfG3'
+TEST_PP = 'https://storage.googleapis.com/inkchat-58958.appspot.com/users/pp/0KEYuXyOxcUjNSESd4RHeAOi3BP2.jpg'
+with open(os.path.dirname(__file__) + '/../resources/pp.txt', 'r') as file:
+	PP_STRING = file.read()
 
 GET_USER_PARAMS = [
 	# Existent user
@@ -19,7 +24,7 @@ GET_USER_PARAMS = [
 				TEST1_UID: False,
 				TEST2_UID: True
 			},
-			"pp": "", # TODO
+			"pp": TEST_PP
 		}
 	),
 
@@ -41,14 +46,14 @@ CREATE_USER_PARAMS = [
 			"username": "test_username",
 			"email": "test@email.com",
 			"pw": "123456",
-			"path": "" # TODO
+			"path": TEST_PP
 		},
 		201,
 		{
 			"uid": TEST_UID,
 			"username": "test_username",
 			"friends": {},
-			"pp": "", # TODO
+			"pp": TEST_PP
 		}
 	),
 
@@ -64,7 +69,7 @@ CREATE_USER_PARAMS = [
 			"uid": TEST_UID,
 			"username": "test_username",
 			"friends": {},
-			"pp": "", # TODO
+			"pp": ""
 		}
 	),
 
@@ -109,7 +114,7 @@ GET_USER_PP_PARAMS = [
 		{"uid": TEST_UID},
 		200,
 		{
-			"pp": "" # TODO
+			"pp": TEST_PP
 		}
 	),
 
@@ -129,11 +134,11 @@ UPDATE_USER_PP_PARAMS = [
 	(
 		{
 			"uid": TEST_UID,
-			"path": "" # TODO
+			"encoded_pp": PP_STRING
 		},
 		201,
 		{
-			"pp": "" # TODO
+			"pp": TEST_PP
 		}
 	),
 
@@ -145,11 +150,25 @@ UPDATE_USER_PP_PARAMS = [
 		400,
 		"uid: uid of owner of the pic"
 		"path: path to the file"
-	)
+	),
 
-	# No uid in body # TODO
+	# No uid in body
+	(
+		{
+			"encoded_pp": "a"
+		},
+		400,
+		"uid: uid of owner of the pic"
+		"path: path to the file"
+	),
 
-	# No request body # TODO
+	# No request body
+	(
+		{},
+		400,
+		"uid: uid of owner of the pic"
+		"path: path to the file"
+	),
 ]
 
 @pytest.mark.parametrize(
@@ -160,8 +179,7 @@ def test_get_user(client, uid, status_code, data):
 	response = client.get('/users', query_string=uid)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -172,8 +190,7 @@ def test_create_user(client, body, status_code, data):
 	response = client.post('/users', json=body)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -184,8 +201,7 @@ def test_get_user_pp(client, uid, status_code, data):
 	response = client.get('/users/pp', query_string=uid)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data
 
 
 @pytest.mark.parametrize(
@@ -196,5 +212,4 @@ def test_update_user_pp(client, body, status_code, data):
 	response = client.post('/users/pp', json=body)
 	json_data = response.get_json()
 
-	assert response.status_code == status_code
-	assert json_data["data"] == data
+	assert response.status_code == status_code and json_data["data"] == data

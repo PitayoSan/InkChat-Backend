@@ -49,10 +49,10 @@ def get_user_pp():
 @bp.route('pp', methods=['POST'])
 def update_user_pp():
 	json_data = request.get_json()
-	if 'uid' in json_data and 'path' in json_data:
+	if 'uid' in json_data and 'encoded_pp' in json_data:
 		uid = json_data['uid']
-		path = json_data['path']
-		return db.update_user_pp(uid, path)
+		encoded_pp = json_data['encoded_pp']
+		return db.update_user_pp(uid, encoded_pp)
 	return response(
 		400,
 		"uid: uid of owner of the pic"

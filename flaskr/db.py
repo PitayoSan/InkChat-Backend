@@ -1,6 +1,10 @@
+import re
 import os
+import base64
 import firebase_admin
+from uuid import uuid4
 
+from mimetypes import guess_extension
 from flaskr.utils.responses import response
 from firebase_admin import credentials, firestore, storage, auth
 
@@ -24,23 +28,24 @@ class FireDB():
 	def __get_user_doc(self, uid):
 		return self.__db.collection('users').document(uid)
 
-	def __upload_user_pp(self, uid, path):
-		_, file_extension = os.path.splitext(path)
-		pp_name = f"{uid}{file_extension}"
-		blob = self.__bucket.blob(f"users/pp/{pp_name}")
+	def __upload_user_pp(self, uid, encoded_pp):
+		split_pp = encoded_pp.split(',')
+		pp_type = re.split(':|;', split_pp[0])[1]
+		decoded_pp = base64.b64decode(split_pp[1])
+		pp_name = f'{uid}.jpg'
+		blob = self.__bucket.blob(f'users/pp/{pp_name}')
 
-		file_dir = os.path.dirname(path)
-		os.chdir('/mnt/c/Games')
+		new_token = uuid4()
+		metadata  = {"firebaseStorageDownloadTokens": new_token}
+		blob.metadata = metadata
 
-		file_name = os.path.basename(path)
-		with open(file_name, 'rb') as file:
-			blob.upload_from_file(file)
-
+		blob.upload_from_string(decoded_pp, content_type=pp_type)
+		blob.make_public()
 		return blob.public_url
 
 	# Public Methods
 	# Users
-	def create_user(self, username, email, pw, pp_path=None):
+	def create_user(self, username, email, pw, encoded_pp=None):
 		user_record = auth.create_user(email=email, password=pw)
 		uid = user_record.uid
 
@@ -48,7 +53,7 @@ class FireDB():
 			'uid': uid,
 			'username': username,
 			'friends': {},
-			'pp': self.__upload_user_pp(uid, pp_path) if pp_path else ''
+			'pp': self.__upload_user_pp(uid, encoded_pp) if encoded_pp else ''
 		}
 
 		user_doc = self.__get_user_doc(uid)
@@ -67,8 +72,8 @@ class FireDB():
 		if pp_link: return response(200, pp_link)
 		return response(404, "user not found")
 
-	def update_user_pp(self, uid, pp_path):
-		pp_link = self.__upload_user_pp(uid, pp_path)
+	def update_user_pp(self, uid, encoded_pp):
+		pp_link = self.__upload_user_pp(uid, encoded_pp)
 		user_doc = self.__get_user_doc(uid)
 
 		pp = {
