@@ -53,7 +53,7 @@ def delete_friend_or_friend_request():
 	if 'uid' in request.args and 'friend' in request.args:
 		uid = request.args['uid']
 		friend = request.args['friend']
-		if user == friend:
+		if uid == friend:
 			return response(400, "uid and friend can't be the same")
 		return db.delete_friend_or_friend_request(uid, friend)
 	return response(
