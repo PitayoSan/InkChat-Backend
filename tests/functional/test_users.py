@@ -11,6 +11,8 @@ TEST2_UID = 'rMP0MM14zmTdR7T0E9f8m2hJDfG3'
 TEST_PP = 'https://storage.googleapis.com/inkchat-58958.appspot.com/users/pp/0KEYuXyOxcUjNSESd4RHeAOi3BP2.jpg'
 with open(os.path.dirname(__file__) + '/../resources/pp.txt', 'r') as file:
 	PP_STRING = file.read()
+WRONG_FORMAT_PP_STRING = PP_STRING[15:]
+WRONG_FILE_PP_STRING = "data:text/plain" + WRONG_FORMAT_PP_STRING
 
 GET_USER_PARAMS = [
 	# Existent user
@@ -153,7 +155,7 @@ GET_USER_PP_PARAMS = [
 ]
 
 UPDATE_USER_PP_PARAMS = [
-	# Existent user
+	# Existent user, jpeg image
 	(
 		{
 			"uid": TEST_UID,
@@ -163,6 +165,16 @@ UPDATE_USER_PP_PARAMS = [
 		{
 			"pp": TEST_PP
 		}
+	),
+
+	# File extension not accepted
+	(
+		{
+			"uid": TEST_UID,
+			"encoded_pp": WRONG_FILE_PP_STRING
+		},
+		403,
+		"text/plain is not an allowed type"
 	),
 
 	# No path in body

@@ -29,9 +29,15 @@ class FireDB():
 		return self.__db.collection('users').document(uid)
 
 	def __upload_user_pp(self, uid, encoded_pp):
+		allowed_extensions = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif']
 		split_pp = encoded_pp.split(',')
 		pp_type = re.split(':|;', split_pp[0])[1]
+		
+		if pp_type not in allowed_extensions:
+			raise TypeError(f"{pp_type} is not an allowed type")
+
 		decoded_pp = base64.b64decode(split_pp[1])
+		
 		pp_name = f'{uid}.jpg'
 		blob = self.__bucket.blob(f'users/pp/{pp_name}')
 
@@ -77,7 +83,10 @@ class FireDB():
 		return response(404, "user not found")
 
 	def update_user_pp(self, uid, encoded_pp):
-		pp_link = self.__upload_user_pp(uid, encoded_pp)
+		try:
+			pp_link = self.__upload_user_pp(uid, encoded_pp)
+		except TypeError as te:
+			return response(403, str(te))
 		user_doc = self.__get_user_doc(uid)
 
 		pp = {
