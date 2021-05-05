@@ -117,7 +117,12 @@ class FireDB():
 				"sender is already friends with dest or there is already a pending friend request between them"
 			)
 		
-		friends[sender] = False
+		user = user_doc.get().to_dict()
+		friends[sender] = {
+			'username': user['username'],
+			'pp': user['pp'],
+			'is_friends': False,
+		}
 		user_doc.set({'friends': friends}, merge=True)
 		return response(201, dest)
 
