@@ -3,18 +3,20 @@ import json
 
 from flaskr import app
 
+TEST_UID = '0KEYuXyOxcUjNSESd4RHeAOi3BP2'
+TEST1_UID = 'DM2wPOAS0Rerk58bNn5kxs81K452'
+TEST2_UID = 'rMP0MM14zmTdR7T0E9f8m2hJDfG3'
 
 GET_ALL_FRIENDS_PARAMS = [
-	# Uses user 1
+	# Uses user 0
 	# Existent user
 	(
-		{"uid": "test_friends_user_1"},
+		{"uid": TEST_UID},
 		200,
 		{
 			"friends": {
-				"test_friends_user_10": False,
-				"test_friends_user_11": False,
-				"test_friends_user_12": True
+				TEST1_UID: False,
+				TEST2_UID: True
 			}
 		}
 	),
@@ -31,31 +33,24 @@ GET_ALL_FRIENDS_PARAMS = [
 ]
 
 SEND_FRIEND_REQUEST_PARAMS = [
-	# Uses users 2-3
+	# Uses users 1-2
 	# Existent user3 to Existent user4
 	(
-		{"sender": "test_friends_user_2", "dest": "test_friends_user_3"},
+		{"sender": TEST1_UID, "dest": TEST2_UID},
 		201,
-		"test_friends_user_3"
-	),
-
-	# Existent user4 to Existent user3
-	(
-		{"sender": "test_friends_user_3", "dest": "test_friends_user_2"},
-		201,
-		"test_friends_user_2"
+		TEST2_UID
 	),
 
 	# Same user in sender and dest
 	(
-		{"sender": "test_friends_user_2", "dest": "test_friends_user_2"},
+		{"sender": TEST1_UID, "dest": TEST1_UID},
 		400,
 		"sender and dest can't be the same"
 	),
 
 	# No sender in body
 	(
-		{"dest": "test_friends_user_2"},
+		{"dest": TEST1_UID},
 		400,
 		"sender: user sending friend request"
 		"dest: user the friend request is being sent to"
@@ -63,7 +58,7 @@ SEND_FRIEND_REQUEST_PARAMS = [
 
 	# No dest in body
 	(
-		{"sender": "test_friends_user_2"},
+		{"sender": TEST1_UID},
 		400,
 		"sender: user sending friend request"
 		"dest: user the friend request is being sent to"
@@ -95,7 +90,7 @@ def test_get_all_friends(client, uid, status_code, data):
 	SEND_FRIEND_REQUEST_PARAMS
 )
 def test_send_friend_request(client, body, status_code, data):
-	response = client.post('/friends', json=json.dumps(body))
+	response = client.post('/friends', json=body)
 	json_data = response.get_json()
 
 	assert response.status_code == status_code

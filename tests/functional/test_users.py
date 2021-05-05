@@ -3,16 +3,22 @@ import json
 
 from flaskr import app
 
+TEST_UID = '0KEYuXyOxcUjNSESd4RHeAOi3BP2'
+TEST1_UID = 'DM2wPOAS0Rerk58bNn5kxs81K452'
+TEST2_UID = 'rMP0MM14zmTdR7T0E9f8m2hJDfG3'
 
 GET_USER_PARAMS = [
 	# Existent user
 	(
-		{"uid": "test_user"},
+		{"uid": TEST_UID},
 		200,
 		{
-			"uid": "test_user",
-			"username": "test_user",
-			"friends": {}, # TODO
+			"uid": TEST_UID,
+			"username": "test_username",
+			"friends": {
+				TEST1_UID: False,
+				TEST2_UID: True
+			},
 			"pp": "", # TODO
 		}
 	),
@@ -32,14 +38,15 @@ CREATE_USER_PARAMS = [
 	# Success with path
 	(
 		{
-			"uid": "test_user",
-			"username": "test_user",
+			"username": "test_username",
+			"email": "test@email.com",
+			"pw": "123456",
 			"path": "" # TODO
 		},
 		201,
 		{
-			"uid": "test_user",
-			"username": "test_user",
+			"uid": TEST_UID,
+			"username": "test_username",
 			"friends": {},
 			"pp": "", # TODO
 		}
@@ -48,37 +55,40 @@ CREATE_USER_PARAMS = [
 	# Success without path
 	(
 		{
-			"uid": "test_user",
-			"username": "test_user",
+			"username": "test_username",
+			"email": "test@email.com",
+			"pw": "123456",
 		},
 		201,
 		{
-			"uid": "test_user",
-			"username": "test_user",
+			"uid": TEST_UID,
+			"username": "test_username",
 			"friends": {},
 			"pp": "", # TODO
 		}
 	),
 
-	# No uid in body
+	# No email in body
 	(
 		{
 			"username": "test_user"
 		},
 		400,
-		"uid: uid of user being created"
 		"username: username of user being created"
+		"email: email of user being created"
+		"pw: password of user being created"
 		"(optional) path: path of the file to upload"
 	),
 
 	# No username in body
 	(
 		{
-			"uid": "test_user",
+			"email": "test_user@mail.com",
 		},
 		400,
-		"uid: uid of user being created"
 		"username: username of user being created"
+		"email: email of user being created"
+		"pw: password of user being created"
 		"(optional) path: path of the file to upload"
 	),
 
@@ -86,8 +96,9 @@ CREATE_USER_PARAMS = [
 	(
 		{},
 		400,
-		"uid: uid of user being created"
 		"username: username of user being created"
+		"email: email of user being created"
+		"pw: password of user being created"
 		"(optional) path: path of the file to upload"
 	)
 ]
@@ -95,7 +106,7 @@ CREATE_USER_PARAMS = [
 GET_USER_PP_PARAMS = [
 	# Existent user
 	(
-		{"uid": "test_user"},
+		{"uid": TEST_UID},
 		200,
 		{
 			"pp": "" # TODO
@@ -117,7 +128,7 @@ UPDATE_USER_PP_PARAMS = [
 	# Existent user
 	(
 		{
-			"uid": "test_user",
+			"uid": TEST_UID,
 			"path": "" # TODO
 		},
 		201,
@@ -129,7 +140,7 @@ UPDATE_USER_PP_PARAMS = [
 	# No path in body
 	(
 		{
-			"uid": "test_user"
+			"uid": TEST_UID
 		},
 		400,
 		"uid: uid of owner of the pic"
@@ -158,7 +169,7 @@ def test_get_user(client, uid, status_code, data):
 	CREATE_USER_PARAMS
 )
 def test_create_user(client, body, status_code, data):
-	response = client.post('/users', json=json.dumps(body))
+	response = client.post('/users', json=body)
 	json_data = response.get_json()
 
 	assert response.status_code == status_code
@@ -182,7 +193,7 @@ def test_get_user_pp(client, uid, status_code, data):
 	UPDATE_USER_PP_PARAMS
 )
 def test_update_user_pp(client, body, status_code, data):
-	response = client.post('/users/pp', json=json.dumps(body))
+	response = client.post('/users/pp', json=body)
 	json_data = response.get_json()
 
 	assert response.status_code == status_code

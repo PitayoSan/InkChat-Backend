@@ -18,7 +18,7 @@ def get_all_friends():
 
 @bp.route('', methods=['POST'])
 def send_friend_request():
-	json_data = json.loads(request.get_json())
+	json_data = request.get_json()
 	if 'sender' in json_data and 'dest' in json_data:
 		sender = json_data['sender']
 		dest = json_data['dest']
@@ -34,7 +34,7 @@ def send_friend_request():
 
 @bp.route('', methods=['PUT'])
 def accept_friend_request():
-	json_data = json.loads(request.get_json())
+	json_data = request.get_json()
 	if 'sender' in json_data and 'dest' in json_data:
 		sender = json_data['sender']
 		dest = json_data['dest']

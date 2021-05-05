@@ -19,16 +19,18 @@ def get_user():
 
 @bp.route('', methods=['POST'])
 def create_user():
-	json_data = json.loads(request.get_json())
-	if 'uid' in json_data and 'username' in json_data:
-		uid = json_data['uid']
+	json_data = request.get_json()
+	if 'username' in json_data and 'email' in json_data and 'pw' in json_data:
 		username = json_data['username']
+		email = json_data['email']
+		pw = json_data['pw']
 		pp_path = json_data.get('pp', None)
-		return db.create_user(uid, username, pp_path)
+		return db.create_user(username, email, pw, pp_path)
 	return response(
 		400,
-		"uid: uid of user being created"
 		"username: username of user being created"
+		"email: email of user being created"
+		"pw: password of user being created"
 		"(optional) path: path of the file to upload"
 	)
 
@@ -46,7 +48,7 @@ def get_user_pp():
 
 @bp.route('pp', methods=['POST'])
 def update_user_pp():
-	json_data = json.loads(request.get_json())
+	json_data = request.get_json()
 	if 'uid' in json_data and 'path' in json_data:
 		uid = json_data['uid']
 		path = json_data['path']

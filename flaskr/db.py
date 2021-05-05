@@ -2,7 +2,7 @@ import os
 import firebase_admin
 
 from flaskr.utils.responses import response
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore, storage, auth
 
 
 class FireDB():
@@ -40,7 +40,10 @@ class FireDB():
 
 	# Public Methods
 	# Users
-	def create_user(self, uid, username, pp_path=None):
+	def create_user(self, username, email, pw, pp_path=None):
+		user_record = auth.create_user(email=email, password=pw)
+		uid = user_record.uid
+
 		user = {
 			'uid': uid,
 			'username': username,
