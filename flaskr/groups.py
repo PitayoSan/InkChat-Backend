@@ -7,7 +7,7 @@ from flaskr.utils.responses import response
 
 bp = Blueprint('groups', __name__, url_prefix='/groups')
 
-@bp.route('', methods=['GET'])
+@bp.route('all', methods=['GET'])
 def get_all_groups():
 	return db.get_all_groups()
 
@@ -15,9 +15,15 @@ def get_all_groups():
 def create_group():
 	if 'name' in request.args:
 		name = request.args['name']
-		print(db)
 		return db.create_group(name)
 	return response(
 		400,
 		"name: name of group being created"
 	)
+
+@bp.route('', methods=['GET'])
+def get_groupo():
+	if 'name' in request.args:
+		name = request.args['name']
+		return db.get_group(name)
+	return response(400, "name: name of requested group")

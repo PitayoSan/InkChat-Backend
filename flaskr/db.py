@@ -189,7 +189,7 @@ class FireDB():
 	
 	# Groups
 	def get_all_groups(self):
-		return response(200, {'groups': self.__get_group_list()})
+		return response(200, self.__get_group_list())
 	
 	def create_group(self, name):
 		if name in self.__get_group_list():
@@ -203,3 +203,9 @@ class FireDB():
 		doc_ref = self.__db.collection('groups').document(name)
 		doc_ref.set(group)
 		return response(201, group)
+	
+	def get_group(self, name):		
+		group_ref = self.__db.collection('groups').document(name)
+		group = group_ref.get().to_dict()
+		if group: return response(200, group)
+		return response(404, "group not found")
