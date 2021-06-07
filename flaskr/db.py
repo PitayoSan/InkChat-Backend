@@ -209,3 +209,22 @@ class FireDB():
 		group = group_ref.get().to_dict()
 		if group: return response(200, group)
 		return response(404, "group not found")
+	
+	def send_message(self, name, msg, uid, username, time, pp):
+		group_ref = self.__db.collection('groups').document(name)
+		group = group_ref.get().to_dict()
+		if group:
+			message = {
+				'data': msg,
+				'uid': uid,
+				'username': username,
+				'time': time,
+				'pp': pp
+			}
+
+			messages = group['msg']
+			messages.append(message)
+
+			group_ref.set({'msg': messages}, merge=True)
+			return response(200, message)
+		return response(404, "group not found")
