@@ -10,8 +10,9 @@ CORS(app)
 db = FireDB()
 
 # Import blueprints
-from flaskr import home, users, friends
+from flaskr import home, users, friends, groups
 
 app.register_blueprint(home.bp)
 app.register_blueprint(users.bp)
 app.register_blueprint(friends.bp)
+app.register_blueprint(groups.bp)
