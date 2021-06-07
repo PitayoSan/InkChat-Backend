@@ -49,6 +49,13 @@ class FireDB():
 		blob.make_public()
 		return blob.public_url
 
+	def __get_group_list(self):
+		groups = []
+		groups_docs = self.__db.collection('groups').stream()
+		for doc in groups_docs:
+			groups.append(doc.to_dict()['name'])
+		return groups
+
 	# Public Methods
 	# Users
 	def create_user(self, username, email, pw, encoded_pp=None):
@@ -179,3 +186,20 @@ class FireDB():
 			temp['friends'] = friend_friends
 			friend_doc.set(temp)
 		return response(200, friend)
+	
+	# Groups
+	def get_all_groups(self):
+		return response(200, {'groups': self.__get_group_list()})
+	
+	def create_group(self, name):
+		if name in self.__get_group_list():
+			return response(403, "group already exists")
+
+		group = {
+			'name': name,
+			'msg': [],
+		}
+
+		doc_ref = self.__db.collection('groups').document(name)
+		doc_ref.set(group)
+		return response(201, group)
