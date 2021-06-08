@@ -149,8 +149,11 @@ class FireDB():
 			return response(403, "there is no pending friend request between sender and dest")
 		sender_friends = sender_dict['friends']
 
+		channel = 'chan_' + sender_dict['username'] + '_' + dest_dict['username']
+
 		temp = dest_friends[sender]
 		temp['is_friends'] = True
+		temp['channel'] = channel
 		dest_friends[sender] = temp
 		dest_doc.set({'friends': dest_friends}, merge=True)
 
@@ -159,6 +162,7 @@ class FireDB():
 			'username': dest_dict['username'],
 			'pp': dest_dict['pp'],
 			'is_friends': True,
+			'channel': channel,
 		}
 		sender_doc.set({'friends': sender_friends}, merge=True)
 		return response(201, sender)
