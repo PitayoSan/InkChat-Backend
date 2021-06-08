@@ -16,6 +16,7 @@ class FireDB():
 		firebase_admin.initialize_app(self.__cred)
 		self.__db = firestore.client()
 		self.__bucket = self.__init_storage()
+		self.auth = auth
 
 	def __init_storage(self):
 		try:
@@ -32,12 +33,12 @@ class FireDB():
 		allowed_extensions = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif']
 		split_pp = encoded_pp.split(',')
 		pp_type = re.split(':|;', split_pp[0])[1]
-		
+
 		if pp_type not in allowed_extensions:
 			raise TypeError(f"{pp_type} is not an allowed type")
 
 		decoded_pp = base64.b64decode(split_pp[1])
-		
+
 		pp_name = f'{uid}.jpg'
 		blob = self.__bucket.blob(f'users/pp/{pp_name}')
 
@@ -60,7 +61,7 @@ class FireDB():
 	# Users
 	def create_user(self, username, email, pw, encoded_pp=None):
 		try:
-			user_record = auth.create_user(email=email, password=pw)
+			user_record = self.auth.create_user(email=email, password=pw)
 		except firebase_admin._auth_utils.EmailAlreadyExistsError:
 			return response(403, "user already exists")
 
@@ -116,7 +117,7 @@ class FireDB():
 
 		user_doc = self.__get_user_doc(dest)
 		user_dict = user_doc.get().to_dict()
-		if user_dict is None: return response(404, "dest not found")        
+		if user_dict is None: return response(404, "dest not found")
 
 		friends = user_dict['friends']
 		if sender in friends:
@@ -124,7 +125,7 @@ class FireDB():
 				403,
 				"sender is already friends with dest or there is already a pending friend request between them"
 			)
-		
+
 		user = user_dict
 		friends[sender] = {
 			'username': user['username'],
@@ -138,11 +139,11 @@ class FireDB():
 		sender_doc = self.__get_user_doc(sender)
 		sender_dict = sender_doc.get().to_dict()
 		if sender_dict is None: return response(404, "sender not found")
-		
+
 		dest_doc = self.__get_user_doc(dest)
 		dest_dict = dest_doc.get().to_dict()
 		if dest_dict is None: return response(404, "dest not found")
-	
+
 		dest_friends = dest_dict['friends']
 		if sender not in dest_friends or dest_friends[sender] == True:
 			return response(403, "there is no pending friend request between sender and dest")
@@ -153,7 +154,7 @@ class FireDB():
 		dest_friends[sender] = temp
 		dest_doc.set({'friends': dest_friends}, merge=True)
 
-		
+
 		sender_friends[dest] = {
 			'username': dest_dict['username'],
 			'pp': dest_dict['pp'],
@@ -173,24 +174,24 @@ class FireDB():
 				403,
 				"friend isn't a friend of user or there is no pending friend request between them"
 			)
-		
+
 		friend_friends = friend_doc.get().to_dict()['friends']
 		user_friends.pop(friend)
 		temp = user_doc.get().to_dict()
 		temp['friends'] = user_friends
 		user_doc.set(temp)
-		
+
 		if uid in friend_friends:
 			friend_friends.pop(uid)
 			temp = friend_doc.get().to_dict()
 			temp['friends'] = friend_friends
 			friend_doc.set(temp)
 		return response(200, friend)
-	
+
 	# Groups
 	def get_all_groups(self):
 		return response(200, self.__get_group_list())
-	
+
 	def create_group(self, name):
 		if name in self.__get_group_list():
 			return response(403, "group already exists")
@@ -203,13 +204,13 @@ class FireDB():
 		doc_ref = self.__db.collection('groups').document(name)
 		doc_ref.set(group)
 		return response(201, group)
-	
-	def get_group(self, name):		
+
+	def get_group(self, name):
 		group_ref = self.__db.collection('groups').document(name)
 		group = group_ref.get().to_dict()
 		if group: return response(200, group)
 		return response(404, "group not found")
-	
+
 	def send_message(self, name, msg, uid, username, time, pp):
 		group_ref = self.__db.collection('groups').document(name)
 		group = group_ref.get().to_dict()
