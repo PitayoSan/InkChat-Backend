@@ -1,7 +1,7 @@
 import functools
 import json
 
-from flaskr import db
+from flaskr import db, pubnub
 from flask import Blueprint, request
 from flaskr.utils.responses import response
 
@@ -14,7 +14,14 @@ def grant_token():
 		raw_token = request.headers['Authorization']
 		token = raw_token.split(' ')[1]
 		decoded_token = db.auth.verify_id_token(token)
-		if decoded_token:
-			return 'true'
-		return 'false'
+		if not decoded_token:
+			return response(403, 'Unauthorized')
+		channels = [friend.channel for friend in db.get_all_friends()]
+		channels.append(db.get_all_groups())
+		pubnub.grant()\
+			.auth_keys(token)\
+			.channels(channels)\
+			.read(True)\
+			.write(True)
+		return 'true'
 	return response(400, 'No valid Authorization token was found')

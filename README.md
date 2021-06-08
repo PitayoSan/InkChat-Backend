@@ -85,6 +85,17 @@ Also, in order for the server endpoints to interact properly with Firebase, the 
 
 which can also be exported or stored in a file.
 
+And, in order for the server endpoints to interact properly with PubNub, the following env vars are needed:
+
+```
+(venv) $ export PN_SUBSCRIBE_KEY=<subscribe key>
+(venv) $ export PN_PUBLISH_KEY=<publish key>
+(venv) $ export PN_SECRET_KEY=<secret key>
+(venv) $ export PN_SERVER_UUID=<server uuid>
+```
+
+which can also be exported or stored in a file.
+
 
 ## Run server
 
