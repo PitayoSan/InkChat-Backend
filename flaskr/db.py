@@ -29,6 +29,25 @@ class FireDB():
 	def __get_user_doc(self, uid):
 		return self.__db.collection('users').document(uid)
 
+	def __get_user_doc_where_username(self, username):
+		return self.__db.collection('users').where('username', '==', username)
+
+	def __is_user_unique(self, username):
+		user_doc = self.__get_user_doc_where_username(username)
+		users = user_doc.get()
+		if len(users) == 0:
+			return True
+		return False
+
+	def __get_user_uid(self, username):
+		user_doc = self.__get_user_doc_where_username(username)
+		users = user_doc.get()
+		if len(users) == 0:
+			return None
+		if len(users) > 1:
+			return None
+		return users[0].to_dict()['uid']
+
 	def __upload_user_pp(self, uid, encoded_pp):
 		allowed_extensions = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif']
 		split_pp = encoded_pp.split(',')
@@ -60,6 +79,9 @@ class FireDB():
 	# Public Methods
 	# Users
 	def create_user(self, username, email, pw, encoded_pp=None):
+		if not self.__is_user_unique(username):
+			return response(403, "username already exists")
+
 		try:
 			user_record = self.auth.create_user(email=email, password=pw)
 		except firebase_admin._auth_utils.EmailAlreadyExistsError:
@@ -113,27 +135,30 @@ class FireDB():
 
 	def send_friend_request(self, sender, dest):
 		sender_doc = self.__get_user_doc(sender)
-		if sender_doc.get().to_dict() is None: return response(404, "sender not found")
+		sender_dict = sender_doc.get().to_dict()
+		if sender_dict is None: return response(404, "sender not found")
 
-		user_doc = self.__get_user_doc(dest)
-		user_dict = user_doc.get().to_dict()
-		if user_dict is None: return response(404, "dest not found")
+		dest_uid = self.__get_user_uid(dest)
+		if dest_uid is None: return response(404, "dest not found")
 
-		friends = user_dict['friends']
-		if sender in friends:
+		dest_doc = self.__get_user_doc(dest_uid)
+		dest_dict = dest_doc.get().to_dict()
+		if dest_dict is None: return response(404, "dest not found")
+
+		dest_friends = dest_dict['friends']
+		if sender in dest_friends:
 			return response(
 				403,
 				"sender is already friends with dest or there is already a pending friend request between them"
 			)
 
-		user = user_dict
-		friends[sender] = {
-			'username': user['username'],
-			'pp': user['pp'],
+		dest_friends[sender] = {
+			'username': sender_dict['username'],
+			'pp': sender_dict['pp'],
 			'is_friends': False,
 		}
-		user_doc.set({'friends': friends}, merge=True)
-		return response(201, dest)
+		dest_doc.set({'friends': dest_friends}, merge=True)
+		return response(201, dest_uid)
 
 	def accept_friend_request(self, sender, dest):
 		sender_doc = self.__get_user_doc(sender)
@@ -169,25 +194,27 @@ class FireDB():
 
 	def delete_friend_or_friend_request(self, uid, friend):
 		user_doc = self.__get_user_doc(uid)
-		if user_doc.get().to_dict() is None: return response(404, "user not found")
+		user_dict = user_doc.get().to_dict()
+		if user_dict is None: return response(404, "user not found")
 
 		friend_doc = self.__get_user_doc(friend)
-		user_friends = user_doc.get().to_dict()['friends']
+		friend_dict = friend_doc.get().to_dict()
+		user_friends = user_dict['friends']
 		if friend not in user_friends:
 			return response(
 				403,
 				"friend isn't a friend of user or there is no pending friend request between them"
 			)
 
-		friend_friends = friend_doc.get().to_dict()['friends']
+		friend_friends = friend_dict['friends']
 		user_friends.pop(friend)
-		temp = user_doc.get().to_dict()
+		temp = user_dict
 		temp['friends'] = user_friends
 		user_doc.set(temp)
 
 		if uid in friend_friends:
 			friend_friends.pop(uid)
-			temp = friend_doc.get().to_dict()
+			temp = friend_dict
 			temp['friends'] = friend_friends
 			friend_doc.set(temp)
 		return response(200, friend)

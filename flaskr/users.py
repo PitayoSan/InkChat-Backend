@@ -17,6 +17,14 @@ def get_user():
 	return response(400, "uid: uid of requested user")
 
 
+@bp.route('uid', methods=['GET'])
+def get_user_uid():
+	if 'username' in request.args:
+		username = request.args['username']
+		return db.get_user_uid(username)
+	return response(400, "username: username of requested user")
+
+
 @bp.route('', methods=['POST'])
 def create_user():
 	json_data = request.get_json()
